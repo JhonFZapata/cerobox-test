@@ -14,5 +14,13 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
-});
+    return view('auth.login');
+})->middleware('guest')->name('/');
+
+Auth::routes(['register' => false]);
+
+Route::get('/home', 'HomeController@index')->name('home');
+Route::resource('services', 'ServiceController');
+
+Route::get('/getallrows', 'ServiceController@getAllRows');
+Route::post('/aja', 'ServiceController@aja');
