@@ -42,11 +42,10 @@
             </div>
             <div class="modal-body">
                 <form>
-                 <!-- crea los campos basado en el objsave y asigna v-model a cada propiedad del mismo y placeholder el valor de los headers -->
-                    <div v-for="(f, k, i) in objSave" :key="i" class="form-group">
+                 <!-- crea los campos basado en el objCurrent y asigna v-model a cada propiedad del mismo y placeholder el valor de los headers -->
+                    <div v-for="(f, k, i) in objCurrent" :key="i" class="form-group">
 
-                        <input class="form-control" type="text" :placeholder="headers[i]"  v-model="objSave[k]">
-                        <!-- <input v-for="(f, k, i) in objSave" :key="i"   class="form-control" type="text" :placeholder="headers[i]"  v-model="objSave[k]"> este funciona-->
+                        <input class="form-control" type="text" :placeholder="objData.headers[i]"  v-model="objCurrent[k]">
                     </div>
                        
                 </form>
@@ -65,73 +64,77 @@
     export default {
         name: 'DataTable',
         data: () => ({
-            objDefault:{},
-            headers:[],
-            modalAction: '',
-            objSave: {},
-            objData:{},
+            objDefault:{}, // para reiniciar el objCurrent sin perder el modelo
+            objSend:{}, // para tomar un item de la tabla con el id
+            modalAction: '', // captura la accion de guardado o actualizado
+            objCurrent: {}, // enlaza los campos de entrada para ser enviados
+            objData:{}, // contiene la data necesesaria del back-end para el componente front-end
         }),
         beforeCreate(){
-            console.log('before create');
         },
         created(){
-            console.log('create');
 
         },
         mounted(){
+            // llama el metodo cuando se monta el componente
             this.readItem()
-            console.log('mounted');
         },
         methods: {
+            // determina la accion a realizar cuando se pulsa el boton Crear/Editar del modal
             createItem(){
-                axios.post('/services', 
-                    // this.objData.rows[0]
+                if (this.modalAction == 'Nuevo') {
+                    axios.post('/services', 
+                    this.objCurrent
             )
                 .then((res) => {
                     $('#exampleModal').modal('hide'); 
-                    console.log('POSt ok');
-                    console.log(res.data);
-                        // this.readItem();
+                        this.readItem();
                 })
                 .catch(function(err) {
-                    console.log(err);
                 })
-                // .then(() => {
-                    //     // this.readItem()
-                //     console.log('then 2');
-                // // loading.style.display = 'none';
-                // })
                 .finally( () => this.readItem());
+                } else {
+                    this.objCurrent.id = this.objSend.id
+                    axios.patch('/services', 
+                        this.objCurrent
+                        
+                )
+                    .then((res) => {
+                        $('#exampleModal').modal('hide'); 
+                            this.readItem();
+                    })
+                    .catch(function(err) {
+                        console.log(err);
+                    })
+                    .finally( () => this.readItem());
+                }
 
 
             },
+            // obtiene desde el back-end las filas de una tabla en la DB y los datos para el funcionamiento del componente
             readItem(){
                 axios.get('/getallrows')
                 .then( (res) => {
                     this.objData = res.data
                     this.objDefault = res.data.fields
-                    this.headers = res.data.headers
-                    // this.objDefault = Object.assign({}, res.data.fields)
-                    console.log(res.data)
                 })
                 .catch( (err) => console.error(err))
-                .finally( () => console.log('finish'))
             },
+            // toma un objeto item al pulsar el boton editar y lo enlaza con los campos de entrada excluyendo la propiedad id
             updateItem(row){
-                // alert('edit: '+ id) atraces de row injectar datos en fields
-                // console.log(row);
                 this.modalAction = 'Editar'
-                this.objSave = Object.assign({}, row)
-                delete this.objSave.id;
+                this.objCurrent = Object.assign({}, row)
+                this.objSend = Object.assign({}, row)
+                delete this.objCurrent.id;
                 $('#exampleModal').modal('show'); 
             },
             deleteItem(id){
                 alert('delete: '+ id)
             },
+            // activa la visibilidad del modal
             openModal(){
                 this.modalAction = 'Nuevo'
-                this.objSave = Object.assign({}, this.objDefault)
-                // this.objSave = {}
+                this.objCurrent = Object.assign({}, this.objDefault)
                 $('#exampleModal').modal('show'); 
             }
         }

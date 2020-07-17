@@ -49,15 +49,6 @@ class ServiceController extends Controller
         return [ 'item' => $item, 'headers' => $headers, 'rows' => $rows, 'fields' => $fields ];
     }
 
-     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function aja()
-    {
-        
-    }
 
     /**
      * Display a listing of the resource.
@@ -87,7 +78,16 @@ class ServiceController extends Controller
      */
     public function store(Request $request)
     {
-        return  $request;
+        $result = DB::table('services')
+        ->insert([
+            'nombre' => $request->nombre,
+            'imagen' => $request->imagen,
+            'tipo' => $request->tipo,
+            'fecha_inicio' => $request->fecha_inicio,
+            'fecha_fin' => $request->fecha_fin,
+            'observaciones' => $request->observaciones
+        ]);
+        return  $result;
     }
 
     /**
@@ -109,7 +109,7 @@ class ServiceController extends Controller
      */
     public function edit(Service $service)
     {
-        //
+        
     }
 
     /**
@@ -121,7 +121,17 @@ class ServiceController extends Controller
      */
     public function update(Request $request, Service $service)
     {
-        //
+        $result = DB::table('services')
+        ->where('id_servicio', $request->id)
+        ->update([
+            'nombre' => $request->nombre,
+            'imagen' => $request->imagen,
+            'tipo' => $request->tipo,
+            'fecha_inicio' => $request->fecha_inicio,
+            'fecha_fin' => $request->fecha_fin,
+            'observaciones' => $request->observaciones
+        ]);
+        return  $result;
     }
 
     /**

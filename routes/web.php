@@ -23,4 +23,4 @@ Route::get('/home', 'HomeController@index')->name('home');
 Route::resource('services', 'ServiceController');
 
 Route::get('/getallrows', 'ServiceController@getAllRows');
-Route::post('/aja', 'ServiceController@aja');
+Route::patch('/services', 'ServiceController@update');

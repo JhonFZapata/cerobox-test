@@ -1970,78 +1970,80 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
-//
 /* harmony default export */ __webpack_exports__["default"] = ({
   name: 'DataTable',
   data: function data() {
     return {
       objDefault: {},
-      headers: [],
+      // para reiniciar el objCurrent sin perder el modelo
+      objSend: {},
+      // para tomar un item de la tabla con el id
       modalAction: '',
-      objSave: {},
-      objData: {}
+      // captura la accion de guardado o actualizado
+      objCurrent: {},
+      // enlaza los campos de entrada para ser enviados
+      objData: {} // contiene la data necesesaria del back-end para el componente front-end
+
     };
   },
-  beforeCreate: function beforeCreate() {
-    console.log('before create');
-  },
-  created: function created() {
-    console.log('create');
-  },
+  beforeCreate: function beforeCreate() {},
+  created: function created() {},
   mounted: function mounted() {
+    // llama el metodo cuando se monta el componente
     this.readItem();
-    console.log('mounted');
   },
   methods: {
+    // determina la accion a realizar cuando se pulsa el boton Crear/Editar del modal
     createItem: function createItem() {
       var _this = this;
 
-      axios.post('/services' // this.objData.rows[0]
-      ).then(function (res) {
-        $('#exampleModal').modal('hide');
-        console.log('POSt ok');
-        console.log(res.data); // this.readItem();
-      })["catch"](function (err) {
-        console.log(err);
-      }) // .then(() => {
-      //     // this.readItem()
-      //     console.log('then 2');
-      // // loading.style.display = 'none';
-      // })
-      ["finally"](function () {
-        return _this.readItem();
-      });
+      if (this.modalAction == 'Nuevo') {
+        axios.post('/services', this.objCurrent).then(function (res) {
+          $('#exampleModal').modal('hide');
+
+          _this.readItem();
+        })["catch"](function (err) {})["finally"](function () {
+          return _this.readItem();
+        });
+      } else {
+        this.objCurrent.id = this.objSend.id;
+        axios.patch('/services', this.objCurrent).then(function (res) {
+          $('#exampleModal').modal('hide');
+
+          _this.readItem();
+        })["catch"](function (err) {
+          console.log(err);
+        })["finally"](function () {
+          return _this.readItem();
+        });
+      }
     },
+    // obtiene desde el back-end las filas de una tabla en la DB y los datos para el funcionamiento del componente
     readItem: function readItem() {
       var _this2 = this;
 
       axios.get('/getallrows').then(function (res) {
         _this2.objData = res.data;
         _this2.objDefault = res.data.fields;
-        _this2.headers = res.data.headers; // this.objDefault = Object.assign({}, res.data.fields)
-
-        console.log(res.data);
       })["catch"](function (err) {
         return console.error(err);
-      })["finally"](function () {
-        return console.log('finish');
       });
     },
+    // toma un objeto item al pulsar el boton editar y lo enlaza con los campos de entrada excluyendo la propiedad id
     updateItem: function updateItem(row) {
-      // alert('edit: '+ id) atraces de row injectar datos en fields
-      // console.log(row);
       this.modalAction = 'Editar';
-      this.objSave = Object.assign({}, row);
-      delete this.objSave.id;
+      this.objCurrent = Object.assign({}, row);
+      this.objSend = Object.assign({}, row);
+      delete this.objCurrent.id;
       $('#exampleModal').modal('show');
     },
     deleteItem: function deleteItem(id) {
       alert('delete: ' + id);
     },
+    // activa la visibilidad del modal
     openModal: function openModal() {
       this.modalAction = 'Nuevo';
-      this.objSave = Object.assign({}, this.objDefault); // this.objSave = {}
-
+      this.objCurrent = Object.assign({}, this.objDefault);
       $('#exampleModal').modal('show');
     }
   }
@@ -37749,26 +37751,29 @@ var render = function() {
             _c("div", { staticClass: "modal-body" }, [
               _c(
                 "form",
-                _vm._l(_vm.objSave, function(f, k, i) {
+                _vm._l(_vm.objCurrent, function(f, k, i) {
                   return _c("div", { key: i, staticClass: "form-group" }, [
                     _c("input", {
                       directives: [
                         {
                           name: "model",
                           rawName: "v-model",
-                          value: _vm.objSave[k],
-                          expression: "objSave[k]"
+                          value: _vm.objCurrent[k],
+                          expression: "objCurrent[k]"
                         }
                       ],
                       staticClass: "form-control",
-                      attrs: { type: "text", placeholder: _vm.headers[i] },
-                      domProps: { value: _vm.objSave[k] },
+                      attrs: {
+                        type: "text",
+                        placeholder: _vm.objData.headers[i]
+                      },
+                      domProps: { value: _vm.objCurrent[k] },
                       on: {
                         input: function($event) {
                           if ($event.target.composing) {
                             return
                           }
-                          _vm.$set(_vm.objSave, k, $event.target.value)
+                          _vm.$set(_vm.objCurrent, k, $event.target.value)
                         }
                       }
                     })
